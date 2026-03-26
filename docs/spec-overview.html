@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow — Spec Overview</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; color: #1a202c; }
+
+    header { background: #1e3a5f; color: white; padding: 32px 40px; }
+    header h1 { font-size: 28px; font-weight: 700; }
+    header p { margin-top: 8px; color: #90cdf4; font-size: 15px; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+    /* ── Section titles ── */
+    h2 { font-size: 20px; font-weight: 700; color: #1e3a5f; margin-bottom: 20px; border-left: 4px solid #2563eb; padding-left: 12px; }
+    h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+
+    /* ── Why so many files ── */
+    .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 48px; }
+    .why-card { background: white; border-radius: 10px; padding: 20px; border-left: 4px solid #2563eb; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .why-card .icon { font-size: 28px; margin-bottom: 8px; }
+    .why-card p { font-size: 13.5px; color: #4a5568; line-height: 1.6; }
+
+    /* ── File cards ── */
+    .section { margin-bottom: 48px; }
+    .file-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .file-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); border-top: 4px solid #e2e8f0; }
+    .file-card.blue  { border-top-color: #2563eb; }
+    .file-card.green { border-top-color: #16a34a; }
+    .file-card.amber { border-top-color: #d97706; }
+    .file-card.purple{ border-top-color: #7c3aed; }
+    .file-card.red   { border-top-color: #dc2626; }
+
+    .file-name { font-family: monospace; font-size: 13px; font-weight: 700; color: #1e3a5f; background: #eff6ff; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
+    .badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 10px; margin-left: 6px; }
+    .badge.human  { background: #dbeafe; color: #1d4ed8; }
+    .badge.ai     { background: #dcfce7; color: #15803d; }
+    .badge.both   { background: #fef9c3; color: #92400e; }
+    .purpose { font-size: 13px; color: #4a5568; line-height: 1.6; margin-bottom: 10px; }
+    .reads { font-size: 12px; color: #6b7280; }
+    .reads span { font-family: monospace; background: #f3f4f6; padding: 1px 5px; border-radius: 3px; }
+
+    /* ── Flow diagram ── */
+    .flow { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 4px rgba(0,0,0,.06); margin-bottom: 48px; }
+    .flow-row { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; margin-bottom: 12px; }
+    .flow-box { background: #eff6ff; border: 2px solid #2563eb; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; color: #1e40af; text-align: center; min-width: 130px; }
+    .flow-box.green  { background: #f0fdf4; border-color: #16a34a; color: #166534; }
+    .flow-box.amber  { background: #fffbeb; border-color: #d97706; color: #92400e; }
+    .flow-box.purple { background: #faf5ff; border-color: #7c3aed; color: #5b21b6; }
+    .flow-box.red    { background: #fef2f2; border-color: #dc2626; color: #991b1b; }
+    .flow-box small  { display: block; font-size: 11px; font-weight: 400; opacity: 0.8; margin-top: 2px; }
+    .arrow { font-size: 20px; color: #94a3b8; margin: 0 8px; }
+    .arrow.down { transform: rotate(90deg); display: block; text-align: center; margin: 4px auto; }
+
+    /* ── Interlink diagram ── */
+    .interlink { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 4px rgba(0,0,0,.06); margin-bottom: 48px; overflow-x: auto; }
+    table.link-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.link-table th { background: #1e3a5f; color: white; padding: 10px 14px; text-align: left; }
+    table.link-table td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+    table.link-table tr:hover td { background: #f8fafc; }
+    .ref { font-family: monospace; font-size: 12px; background: #f3f4f6; padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+    .tick { color: #16a34a; font-weight: 700; }
+
+    /* ── Pros ── */
+    .pros-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px; }
+    .pro { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .pro .num { font-size: 28px; font-weight: 800; color: #dbeafe; line-height: 1; }
+    .pro h3 { color: #1e3a5f; margin: 4px 0 8px; }
+    .pro p { font-size: 13px; color: #4a5568; line-height: 1.6; }
+
+    /* ── Architecture note ── */
+    .arch-note { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 24px; margin-bottom: 48px; }
+    .arch-note h3 { color: #92400e; margin-bottom: 10px; }
+    .arch-note p { font-size: 13.5px; color: #78350f; line-height: 1.7; }
+    .arch-note ul { margin-top: 10px; padding-left: 20px; }
+    .arch-note li { font-size: 13px; color: #78350f; line-height: 1.8; }
+
+    /* ── Token budget ── */
+    .token-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 48px; }
+    .token-card { flex: 1; min-width: 160px; background: white; border-radius: 10px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); text-align: center; }
+    .token-card .fname { font-family: monospace; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+    .token-card .tokens { font-size: 22px; font-weight: 700; color: #1e3a5f; }
+    .token-card .label { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .token-card.highlight .tokens { color: #2563eb; }
+
+    @media(max-width: 700px) {
+      .why-grid, .file-grid, .pros-grid { grid-template-columns: 1fr; }
+      .flow-row { flex-direction: column; }
+      .arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>TaskFlow — Spec-Driven Development Overview</h1>
+  <p>Why every markdown file exists, how they interlink, and what value they deliver to Claude Code</p>
+</header>
+
+<div class="page">
+
+  <!-- WHY SO MANY FILES -->
+  <h2>Why So Many Files?</h2>
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="icon">🎯</div>
+      <h3>One File = One Responsibility</h3>
+      <p>Each file has a single, clear job. PRD defines WHAT. TECHNICAL_SPEC defines HOW. CLAUDE.md defines RULES. Specs define CONTRACTS. Tasks define WORK ORDERS. Mixing these would make every file bloated and untrustworthy.</p>
+    </div>
+    <div class="why-card">
+      <div class="icon">🪙</div>
+      <h3>Token Efficiency for AI</h3>
+      <p>Claude Code has a context window. Sending everything on every task wastes tokens and causes confusion. By splitting files, you send only what's needed per task — e.g. auth task only gets CLAUDE.md + specs/auth.md.</p>
+    </div>
+    <div class="why-card">
+      <div class="icon">🔒</div>
+      <h3>Single Source of Truth</h3>
+      <p>If a rule lives in one place, it can only be wrong in one place and fixed in one place. Repeating rules across files causes drift — one copy gets updated, others don't, and AI produces inconsistent code.</p>
+    </div>
+    <div class="why-card">
+      <div class="icon">📋</div>
+      <h3>Auditability</h3>
+      <p>Every implementation decision traces back to a spec file. If something in the code is wrong, you find the spec, fix it, and re-run the task. No guessing what the AI was thinking.</p>
+    </div>
+  </div>
+
+  <!-- WORKFLOW FLOW -->
+  <h2>End-to-End Flow</h2>
+  <div class="flow">
+    <div class="flow-row">
+      <div class="flow-box">💬 Chat Tab<small>Discuss & refine specs</small></div>
+      <span class="arrow">→</span>
+      <div class="flow-box amber">📝 Cowork Tab<small>Write spec files to repo</small></div>
+      <span class="arrow">→</span>
+      <div class="flow-box green">⚡ Code Tab<small>Claude Code reads task + spec</small></div>
+      <span class="arrow">→</span>
+      <div class="flow-box purple">✅ Output<small>Routes, schemas, tests</small></div>
+    </div>
+    <div style="margin-top: 20px; text-align:center; font-size:13px; color:#6b7280;">
+      Human writes specs → AI implements → Human reviews → If wrong, fix the spec first
+    </div>
+  </div>
+
+  <!-- FILE DETAILS -->
+  <h2>Every File Explained</h2>
+
+  <div class="section">
+    <h3 style="margin-bottom:12px; color:#64748b;">📁 docs/ — Reference Documents (read by humans + AI at module start)</h3>
+    <div class="file-grid">
+      <div class="file-card blue">
+        <div><span class="file-name">docs/PRD.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose"><strong>What it is:</strong> Product Requirements Document. Defines features, user stories, business rules, and what is out of scope for v1.</p>
+        <p class="purpose"><strong>Why it exists:</strong> Establishes the "why" and "what" before any technical decisions. Prevents scope creep.</p>
+        <p class="reads">Read by: Humans only. Never sent to Claude Code.</p>
+      </div>
+      <div class="file-card blue">
+        <div><span class="file-name">docs/TECHNICAL_SPEC.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose"><strong>What it is:</strong> Full architecture document. Contains ERD (Mongoose schemas), folder structure, API patterns, auth flow, error handling, and environment config.</p>
+        <p class="purpose"><strong>Why it exists:</strong> This IS the architecture document. Claude Code reads it before starting any new module to understand the full system design.</p>
+        <p class="reads">Read by: Claude Code at task 001 and when starting a new module.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3 style="margin-bottom:12px; color:#64748b;">📄 CLAUDE.md — AI Conventions (sent with every single task)</h3>
+    <div class="file-grid">
+      <div class="file-card amber">
+        <div><span class="file-name">CLAUDE.md</span><span class="badge both">Human + AI</span></div>
+        <p class="purpose"><strong>What it is:</strong> Slim (~400 token) standing rules file. Covers stack, naming conventions, folder rules, TypeScript rules, architecture patterns, Mongoose rules, testing rules, and hard constraints.</p>
+        <p class="purpose"><strong>Why it exists:</strong> Claude Code starts fresh on every task. Without this file it would make different decisions each time — inconsistent naming, wrong patterns. This file is Claude Code's permanent memory.</p>
+        <p class="reads">Read by: Claude Code on <strong>every task without exception</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3 style="margin-bottom:12px; color:#64748b;">📋 specs/ — Module Contracts (sent only for relevant tasks)</h3>
+    <div class="file-grid">
+      <div class="file-card green">
+        <div><span class="file-name">specs/auth.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose"><strong>What it is:</strong> Complete auth contract. Defines Mongoose schemas, all 4 endpoints with exact request/response shapes, validation rules, JWT utility signatures, middleware spec, and 10 test cases.</p>
+        <p class="purpose"><strong>Why it exists:</strong> Auth is the foundation of everything. If any detail is missing the AI will invent it — and invent it inconsistently.</p>
+        <p class="reads">Read by: Claude Code only during <span class="ref">tasks/002-auth.md</span></p>
+      </div>
+      <div class="file-card green">
+        <div><span class="file-name">specs/projects.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose"><strong>What it is:</strong> Projects module contract. Defines Mongoose schema, 5 endpoints, cascade delete behaviour, Zod validation schemas, and 12 test cases.</p>
+        <p class="purpose"><strong>Why it exists:</strong> Without it Claude Code doesn't know about cascade deletes, partial update rules, or the correct sort order for project lists.</p>
+        <p class="reads">Read by: Claude Code only during <span class="ref">tasks/003-projects.md</span></p>
+      </div>
+      <div class="file-card green">
+        <div><span class="file-name">specs/tasks.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose"><strong>What it is:</strong> Tasks module contract — the most complex spec. Defines Mongoose schema with 5 indexes, 5 endpoints, 7 filter parameters, tag population rules, Zod schemas, and 18 test cases.</p>
+        <p class="purpose"><strong>Why it exists:</strong> Filtering logic is highly specific. Without a spec the AI cannot know that <code>dueBefore</code> maps to <code>$lte</code> or that tags must always be populated — never raw ObjectIds.</p>
+        <p class="reads">Read by: Claude Code only during <span class="ref">tasks/005-tasks.md</span></p>
+      </div>
+      <div class="file-card green">
+        <div><span class="file-name">specs/tags.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose"><strong>What it is:</strong> Tags module contract. Defines schema with unique constraint, 4 endpoints, duplicate name check, <code>$pull</code> behaviour on delete, and 12 test cases.</p>
+        <p class="purpose"><strong>Why it exists:</strong> The <code>$pull</code> vs <code>$unset</code> distinction and the "tags belong to user not project" design decision must be explicit — otherwise AI guesses wrong.</p>
+        <p class="reads">Read by: Claude Code only during <span class="ref">tasks/004-tags.md</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3 style="margin-bottom:12px; color:#64748b;">⚡ tasks/ — AI Work Orders (one per implementation session)</h3>
+    <div class="file-grid">
+      <div class="file-card purple">
+        <div><span class="file-name">tasks/001-project-setup.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose">Scaffolds entire project skeleton: folders, package.json, tsconfig, app.ts, db.ts, env.ts, AppError, asyncHandler, errorHandler, frontend HTML. No business logic.</p>
+      </div>
+      <div class="file-card purple">
+        <div><span class="file-name">tasks/002-auth.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose">Implements full auth module by referencing specs/auth.md. Points Claude Code at the right spec sections without repeating content.</p>
+      </div>
+      <div class="file-card purple">
+        <div><span class="file-name">tasks/003-projects.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose">Implements projects module. References specs/projects.md. Defines route mounting instruction for app.ts.</p>
+      </div>
+      <div class="file-card purple">
+        <div><span class="file-name">tasks/004-tags.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose">Implements tags module. References specs/tags.md. Tags must be complete before tasks since tasks reference tag IDs.</p>
+      </div>
+      <div class="file-card purple">
+        <div><span class="file-name">tasks/005-tasks.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose">Implements tasks module — most complex task. References specs/tasks.md. Depends on projects + tags being done first.</p>
+      </div>
+      <div class="file-card purple">
+        <div><span class="file-name">tasks/006-frontend.md</span><span class="badge human">Human writes</span></div>
+        <p class="purpose">Implements full Vanilla JS frontend: CSS, router, API wrapper, auth screens, project list, task list with filters. All backend must be complete first.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERLINK TABLE -->
+  <h2>How Files Interlink</h2>
+  <div class="interlink">
+    <table class="link-table">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Reads / Depends On</th>
+          <th>Read By</th>
+          <th>When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="ref">docs/PRD.md</span></td>
+          <td>Nothing</td>
+          <td>Human only</td>
+          <td>Planning phase</td>
+        </tr>
+        <tr>
+          <td><span class="ref">docs/TECHNICAL_SPEC.md</span></td>
+          <td><span class="ref">docs/PRD.md</span></td>
+          <td>Claude Code</td>
+          <td>Task 001 + new module start</td>
+        </tr>
+        <tr>
+          <td><span class="ref">CLAUDE.md</span></td>
+          <td><span class="ref">TECHNICAL_SPEC.md</span></td>
+          <td>Claude Code</td>
+          <td><strong>Every single task</strong></td>
+        </tr>
+        <tr>
+          <td><span class="ref">specs/auth.md</span></td>
+          <td><span class="ref">TECHNICAL_SPEC.md §3</span></td>
+          <td>Claude Code</td>
+          <td>Task 002 only</td>
+        </tr>
+        <tr>
+          <td><span class="ref">specs/projects.md</span></td>
+          <td><span class="ref">TECHNICAL_SPEC.md §3</span></td>
+          <td>Claude Code</td>
+          <td>Task 003 only</td>
+        </tr>
+        <tr>
+          <td><span class="ref">specs/tags.md</span></td>
+          <td><span class="ref">TECHNICAL_SPEC.md §3</span></td>
+          <td>Claude Code</td>
+          <td>Task 004 only</td>
+        </tr>
+        <tr>
+          <td><span class="ref">specs/tasks.md</span></td>
+          <td><span class="ref">TECHNICAL_SPEC.md §3</span>, <span class="ref">specs/tags.md</span> (tag IDs)</td>
+          <td>Claude Code</td>
+          <td>Task 005 only</td>
+        </tr>
+        <tr>
+          <td><span class="ref">tasks/001-*.md</span></td>
+          <td><span class="ref">CLAUDE.md</span>, <span class="ref">TECHNICAL_SPEC.md</span></td>
+          <td>Claude Code</td>
+          <td>First implementation session</td>
+        </tr>
+        <tr>
+          <td><span class="ref">tasks/002 to 006</span></td>
+          <td><span class="ref">CLAUDE.md</span> + relevant <span class="ref">specs/*.md</span></td>
+          <td>Claude Code</td>
+          <td>One session per task file</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TOKEN BUDGET -->
+  <h2>Context Sent to Claude Code Per Task</h2>
+  <div class="token-row">
+    <div class="token-card">
+      <div class="fname">CLAUDE.md</div>
+      <div class="tokens highlight">~400</div>
+      <div class="label">tokens — always</div>
+    </div>
+    <div class="token-card">
+      <div class="fname">task file</div>
+      <div class="tokens">~600</div>
+      <div class="label">tokens — always</div>
+    </div>
+    <div class="token-card">
+      <div class="fname">spec file</div>
+      <div class="tokens">~800</div>
+      <div class="label">tokens — when needed</div>
+    </div>
+    <div class="token-card">
+      <div class="fname">TECHNICAL_SPEC</div>
+      <div class="tokens">~1500</div>
+      <div class="label">tokens — at module start</div>
+    </div>
+    <div class="token-card">
+      <div class="fname">Total per task</div>
+      <div class="tokens highlight">~1800</div>
+      <div class="label">tokens — lean & focused</div>
+    </div>
+  </div>
+
+  <!-- PROS -->
+  <h2>Why This Approach Wins</h2>
+  <div class="pros-grid">
+    <div class="pro">
+      <div class="num">01</div>
+      <h3>Zero Ambiguity</h3>
+      <p>Claude Code never guesses. Every endpoint, field, validation rule, and error code is explicitly written. The output quality equals the spec quality.</p>
+    </div>
+    <div class="pro">
+      <div class="num">02</div>
+      <h3>Reproducible</h3>
+      <p>Run the same task file twice and get the same code. The spec is deterministic. No verbal instructions that are forgotten or misremembered.</p>
+    </div>
+    <div class="pro">
+      <div class="num">03</div>
+      <h3>No Repetition</h3>
+      <p>Generic rules live in CLAUDE.md once. Module rules live in specs once. Task files just reference them. No copy-pasting causes no drift.</p>
+    </div>
+    <div class="pro">
+      <div class="num">04</div>
+      <h3>Easy to Fix</h3>
+      <p>When something is wrong in code, you find the responsible spec, fix one line, re-run the task. The fix propagates automatically.</p>
+    </div>
+    <div class="pro">
+      <div class="num">05</div>
+      <h3>Token Efficient</h3>
+      <p>Claude Code only gets what it needs per task. Auth task never sees tasks spec. Frontend task never sees auth spec. Clean and focused.</p>
+    </div>
+    <div class="pro">
+      <div class="num">06</div>
+      <h3>Team Readable</h3>
+      <p>Any developer can read the specs and understand the entire system without running a single line of code. The spec IS the documentation.</p>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE NOTE -->
+  <h2>Why No Separate Architecture Document?</h2>
+  <div class="arch-note">
+    <h3>⚠️ You already have one — it's called TECHNICAL_SPEC.md</h3>
+    <p>A common misconception is that architecture documents are separate from technical specs. In this project <code>docs/TECHNICAL_SPEC.md</code> <strong>is</strong> the architecture document. It contains everything a traditional architecture doc would have:</p>
+    <ul>
+      <li>📐 Entity Relationship Diagram — all 5 Mongoose schemas with fields and relations</li>
+      <li>🗂 Folder Structure — exact file layout for backend and frontend</li>
+      <li>🔄 Auth Flow — step-by-step JWT + refresh token lifecycle</li>
+      <li>🏛 Layered Architecture — Routes → Controller → Service → Model pattern</li>
+      <li>⚠️ Error Handling Strategy — RFC 7807 format, AppError class design</li>
+      <li>🌍 Environment Config — all env vars and how they are loaded</li>
+      <li>🗃 Database Indexes — all MongoDB indexes for performance</li>
+      <li>📋 Module Build Order — dependency sequence for Claude Code</li>
+    </ul>
+    <p style="margin-top:12px;">Creating a separate "architecture.md" would duplicate this content and create drift. One file, one truth.</p>
+  </div>
+
+</div>
+</body>
+</html>
