@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Environment variables (contain secrets)
+.env
+.env.local
+
+# Build output
+frontend/dist/
+frontend-vanilla/dist/
+
+# Preflight reports (generated)
+preflight-reports/
+
+# MCP config (machine-specific paths)
+.mcp.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
